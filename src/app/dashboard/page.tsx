@@ -4,6 +4,18 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
+// 手機版判斷：視窗寬度 < 768 視為手機。SSR 安全：初始 false，掛載後才量測。
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < breakpoint)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [breakpoint])
+  return isMobile
+}
+
 const NAV = [
   { id: 'start', icon: '⚡', label: '快速開始' },
   { id: 'ig-post', icon: '📷', label: 'IG 文案＋輪播' },
@@ -2064,6 +2076,7 @@ function SettingsPage({ userId, showToast }: { userId: string; showToast: (m: st
 export default function Dashboard() {
   const [page, setPage] = useState('start')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const isMobile = useIsMobile()
   const [user, setUser] = useState<any>(null)
   const [selectedTpl, setSelectedTpl] = useState<Template | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
@@ -2263,15 +2276,17 @@ export default function Dashboard() {
 
   const S = {
     app: { display:'flex', height:'100vh', overflow:'hidden', background:'#0D0D12', color:'#F0EFFF', fontFamily:"-apple-system,'PingFang TC',sans-serif", fontSize:'15px' } as any,
-    sidebar: { width:'220px', minWidth:'220px', background:'#13131A', borderRight:'1px solid rgba(255,255,255,0.07)', display:'flex', flexDirection:'column' as any, position:'relative' as any, zIndex:100 },
+    sidebar: isMobile
+      ? { width:'270px', minWidth:'270px', maxWidth:'82vw', background:'#13131A', borderRight:'1px solid rgba(255,255,255,0.07)', display:'flex', flexDirection:'column' as any, position:'fixed' as any, top:0, left:0, bottom:0, height:'100vh', zIndex:300, transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)', transition:'transform .25s ease', boxShadow: sidebarOpen ? '2px 0 24px rgba(0,0,0,0.55)' : 'none' } as any
+      : { width:'220px', minWidth:'220px', background:'#13131A', borderRight:'1px solid rgba(255,255,255,0.07)', display:'flex', flexDirection:'column' as any, position:'relative' as any, zIndex:100 },
     logo: { padding:'22px 20px 18px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', gap:'10px' },
     logoMark: { width:'32px', height:'32px', background:'linear-gradient(135deg,#7C6FFF,#A78BFA)', borderRadius:'9px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'16px', fontWeight:'800', color:'#fff' },
     logoText: { fontSize:'17px', fontWeight:'700' },
     nav: { flex:1, padding:'12px 10px', display:'flex', flexDirection:'column' as any, gap:'2px' },
     navItem: (active:boolean) => ({ display:'flex', alignItems:'center', gap:'10px', padding:'10px 12px', borderRadius:'8px', fontSize:'14px', fontWeight:'500', color: active ? '#A78BFA' : '#9B9AB8', background: active ? 'rgba(124,111,255,0.12)' : 'transparent', cursor:'pointer', border:'none', width:'100%', textAlign:'left' as any }),
     main: { flex:1, display:'flex', flexDirection:'column' as any, overflow:'hidden' },
-    topbar: { background:'#13131A', borderBottom:'1px solid rgba(255,255,255,0.07)', padding:'0 28px', height:'58px', minHeight:'58px', display:'flex', alignItems:'center', justifyContent:'space-between' },
-    page: { flex:1, overflowY:'auto' as any, padding:'28px' },
+    topbar: { background:'#13131A', borderBottom:'1px solid rgba(255,255,255,0.07)', padding: isMobile ? '0 12px' : '0 28px', height:'58px', minHeight:'58px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:'8px' },
+    page: { flex:1, overflowY:'auto' as any, overflowX:'hidden' as any, padding: isMobile ? '16px' : '28px' },
     card: { background:'#1E1E2E', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'14px', padding:'20px' },
     btnPrimary: { background:'linear-gradient(135deg,#7C6FFF,#A78BFA)', color:'#fff', border:'none', borderRadius:'8px', padding:'10px 18px', fontSize:'13px', fontWeight:'700', cursor:'pointer' },
     btnGhost: { background:'transparent', color:'#9B9AB8', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'8px', padding:'8px 14px', fontSize:'13px', fontWeight:'600', cursor:'pointer' },
@@ -2285,6 +2300,10 @@ export default function Dashboard() {
 
   return (
     <div style={S.app}>
+      {/* 手機抽屜遮罩 */}
+      {isMobile && sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:200 }} />
+      )}
       {/* SIDEBAR */}
       <aside style={S.sidebar}>
         <div style={S.logo}>
@@ -2310,7 +2329,7 @@ export default function Dashboard() {
             <div style={{ fontSize:'13px', fontWeight:'600', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{displayName}</div>
             <div style={{ fontSize:'11px', color:'#A78BFA', background:'rgba(124,111,255,0.15)', padding:'1px 6px', borderRadius:'10px', display:'inline-block', marginTop:'2px' }}>{plan.charAt(0).toUpperCase() + plan.slice(1)}</div>
           </div>
-          <button onClick={() => setPage('settings')} style={{ background:'none', border:'none', color: page==='settings' ? '#A78BFA' : '#5C5B78', cursor:'pointer', fontSize:'16px' }} title="帳號連結 / 設定">⚙️</button>
+          <button onClick={() => { setPage('settings'); setSidebarOpen(false) }} style={{ background:'none', border:'none', color: page==='settings' ? '#A78BFA' : '#5C5B78', cursor:'pointer', fontSize:'16px' }} title="帳號連結 / 設定">⚙️</button>
           <button onClick={handleLogout} style={{ background:'none', border:'none', color:'#5C5B78', cursor:'pointer', fontSize:'16px' }} title="登出">⏻</button>
         </div>
       </aside>
@@ -2319,10 +2338,15 @@ export default function Dashboard() {
       <div style={S.main}>
         {/* TOPBAR */}
         <div style={S.topbar}>
-          <div style={{ fontSize:'17px', fontWeight:'700' }}>{NAV.find(n=>n.id===page)?.label ?? (page==='settings' ? '帳號連結 / 設定' : '')}</div>
-          <div style={{ display:'flex', gap:'10px' }}>
-            <button style={S.btnGhost} onClick={() => showToast('週報功能開發中 📧')}>📧 週報</button>
-            <button style={S.btnPrimary} onClick={() => { setPage('ig-post'); setSelectedTpl(null) }}>✦ 生成文案</button>
+          <div style={{ display:'flex', alignItems:'center', gap:'10px', minWidth:0 }}>
+            {isMobile && (
+              <button onClick={() => setSidebarOpen(true)} aria-label="開啟選單" style={{ background:'none', border:'none', color:'#F0EFFF', fontSize:'22px', cursor:'pointer', padding:'2px 4px', lineHeight:1, flexShrink:0 }}>☰</button>
+            )}
+            <div style={{ fontSize:'17px', fontWeight:'700', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{NAV.find(n=>n.id===page)?.label ?? (page==='settings' ? '帳號連結 / 設定' : '')}</div>
+          </div>
+          <div style={{ display:'flex', gap:'8px', flexShrink:0 }}>
+            <button style={S.btnGhost} onClick={() => showToast('週報功能開發中 📧')}>{isMobile ? '📧' : '📧 週報'}</button>
+            <button style={S.btnPrimary} onClick={() => { setPage('ig-post'); setSelectedTpl(null) }}>{isMobile ? '✦ 生成' : '✦ 生成文案'}</button>
           </div>
         </div>
 
