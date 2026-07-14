@@ -356,6 +356,7 @@ function renderStoryImage(screenText: string, handle: string): Promise<Blob | nu
 }
 
 function AnalyticsPage() {
+  const isMobile = useIsMobile()
   const barData = [3200, 8400, 4100, 5800, 9200, 6300, 3700]
   const maxBar = Math.max(...barData)
   const weekDays = ['一','二','三','四','五','六','日']
@@ -376,7 +377,7 @@ function AnalyticsPage() {
       </DemoNotice>
 
       {/* 數據卡片 */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'14px', marginBottom:'20px' }}>
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap:'14px', marginBottom:'20px' }}>
         {[
           { label:'總觸及人數', value:'24.8K', color:'#A78BFA', delta:'▲ +18% 較上週' },
           { label:'平均 ER', value:'6.4%', color:'#34D399', delta:'▲ +1.2% 較上週' },
@@ -394,7 +395,7 @@ function AnalyticsPage() {
         ))}
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginBottom:'16px' }}>
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:'16px', marginBottom:'16px' }}>
         {/* 每日觸及趨勢 */}
         <div style={{ background:'#1E1E2E', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'14px', padding:'20px' }}>
           <div style={{ fontWeight:'700', fontSize:'13px', color:'#9B9AB8', marginBottom:'16px', display:'flex', justifyContent:'space-between', alignItems:'center', gap:'6px' }}>
@@ -940,13 +941,13 @@ function CalendarPage({ userId, onGenerate }: { userId: string; onGenerate: () =
           <div style={{ background:'rgba(248,113,113,0.06)', border:'1px solid rgba(248,113,113,0.3)', color:'#F87171', fontSize:'12px', borderRadius:'10px', padding:'10px 14px', marginBottom:'12px' }}>❌ 讀取排程失敗：{loadError}</div>
         )}
 
-        <div style={{ background:'#1E1E2E', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'14px', overflow:'hidden' }}>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ background:'#1E1E2E', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'14px', overflowX: isMobile ? 'auto' : 'hidden', overflowY:'hidden' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', minWidth: isMobile ? '500px' : undefined, borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
             {weekDays.map(d => (
               <div key={d} style={{ padding:'10px 8px', textAlign:'center', fontSize:'11px', fontWeight:'700', color:'#5C5B78', textTransform:'uppercase' as any }}>{d}</div>
             ))}
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', minWidth: isMobile ? '500px' : undefined }}>
             {days.map((d, i) => {
               const isToday = !d.otherMonth && today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === d.day
               const dayEvents = d.day ? (eventsByDay[d.day] || []) : []
@@ -1056,6 +1057,7 @@ function QuickStartPage({
   onIndustryChange: (v: string) => void
   onPick: (key: string) => void
 }) {
+  const isMobile = useIsMobile()
   const [industries, setIndustries] = useState<{ key: string; name: string }[]>([])
   const [industryErr, setIndustryErr] = useState(false)
 
@@ -1121,7 +1123,7 @@ function QuickStartPage({
 
       {/* 四個方向大按鈕 */}
       <div style={{ fontSize:'16px', fontWeight:'700', marginBottom:'14px' }}>選一個方向開始</div>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:'16px' }}>
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2,1fr)', gap:'16px' }}>
         {DIRECTIONS.map(d => (
           <button
             key={d.key}
@@ -2407,7 +2409,7 @@ export default function Dashboard() {
               )}
 
               {!tplLoading && !tplError && (
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'16px' }}>
+                <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap:'16px' }}>
                   {templates.filter(t => catFilter==='all' || t.category===catFilter).map(t => {
                     const locked = !canUseTemplate(plan, t.required_plan)
                     return (
