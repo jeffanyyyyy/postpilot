@@ -518,6 +518,7 @@ type PostingTime = {
 }
 
 function SchedulePage({ userId, showToast, onGenerate }: { userId: string, showToast: (m:string)=>void, onGenerate: ()=>void }) {
+  const isMobile = useIsMobile()
   const [step, setStep] = useState(1)
   const [platform, setPlatform] = useState('ig')
   const [content, setContent] = useState('')
@@ -600,7 +601,7 @@ function SchedulePage({ userId, showToast, onGenerate }: { userId: string, showT
   ]
 
   return (
-    <div style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:'20px' }}>
+    <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap:'20px' }}>
       <div>
         {/* 步驟進度條 */}
         <div style={{ background:'#1E1E2E', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'14px', padding:'16px 20px', marginBottom:'16px', display:'flex', alignItems:'center' }}>
@@ -796,6 +797,7 @@ function toLocalInput(iso: string): string {
 }
 
 function CalendarPage({ userId, onGenerate }: { userId: string; onGenerate: () => void }) {
+  const isMobile = useIsMobile()
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
 
@@ -915,7 +917,7 @@ function CalendarPage({ userId, onGenerate }: { userId: string; onGenerate: () =
   while (days.length % 7 !== 0) days.push({ day: 0, otherMonth: true })
 
   return (
-    <div style={{ display:'grid', gridTemplateColumns:'1fr 280px', gap:'20px' }}>
+    <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 280px', gap:'20px' }}>
       <div>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'12px' }}>
           <div style={{ fontSize:'20px', fontWeight:'800' }}>{currentYear} 年 {monthNames[currentMonth]}</div>
@@ -1198,6 +1200,7 @@ function ThreadsPage({
   const [topic, setTopic] = useState('')
   const [brand, setBrand] = useState('')
   const [structure, setStructure] = useState('contrarian')
+  const isMobile = useIsMobile()
   const [built, setBuilt] = useState<ThreadBuilt | null>(null)
   const [view, setView] = useState<'single' | 'thread'>('single')
   const [generating, setGenerating] = useState(false)
@@ -1245,7 +1248,7 @@ function ThreadsPage({
   }
 
   return (
-    <div style={{ display:'grid', gridTemplateColumns:'1fr 380px', gap:'20px' }}>
+    <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap:'20px' }}>
       {/* 左：設定 */}
       <div style={{ display:'flex', flexDirection:'column' as any, gap:'16px' }}>
         <div style={card}>
@@ -1346,6 +1349,7 @@ function IgStoryPage({
   const [topic, setTopic] = useState('')
   const [brand, setBrand] = useState('')
   const [angle, setAngle] = useState('poll_thisthat')
+  const isMobile = useIsMobile()
   const [built, setBuilt] = useState<StoryBuilt | null>(null)
   const [generating, setGenerating] = useState(false)
   const [savingCal, setSavingCal] = useState(false)
@@ -1403,7 +1407,7 @@ function IgStoryPage({
   }
 
   return (
-    <div style={{ display:'grid', gridTemplateColumns:'1fr 400px', gap:'20px' }}>
+    <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 400px', gap:'20px' }}>
       {/* 左：設定 */}
       <div style={{ display:'flex', flexDirection:'column' as any, gap:'16px' }}>
         <div style={card}>
@@ -1547,6 +1551,7 @@ function fmtTime(s: number): string {
 
 // 上傳影片 → 裁剪（起點/終點）→ 疊標題 → 保留原聲或換音樂 → 匯出 9:16
 function ReelsVideoEditor({ showToast }: { showToast: (m: string) => void }) {
+  const isMobile = useIsMobile()
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [videoUrl, setVideoUrl] = useState('')
@@ -1670,7 +1675,7 @@ function ReelsVideoEditor({ showToast }: { showToast: (m: string) => void }) {
   const input = { width:'100%', background:'#13131A', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'8px', color:'#F0EFFF', fontSize:'14px', padding:'10px 13px', outline:'none', boxSizing:'border-box' } as any
 
   return (
-    <div style={{ display:'grid', gridTemplateColumns:'1fr 380px', gap:'20px' }}>
+    <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap:'20px' }}>
       <div style={{ display:'flex', flexDirection:'column' as any, gap:'16px' }}>
         <div style={card}>
           <label style={label}>上傳影片</label>
@@ -1746,6 +1751,7 @@ function ReelsVideoEditor({ showToast }: { showToast: (m: string) => void }) {
 }
 
 function ReelsPage({ showToast }: { showToast: (m: string) => void }) {
+  const isMobile = useIsMobile()
   const [mode, setMode] = useState<'assemble' | 'video'>('assemble')
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const imagesRef = useRef<HTMLImageElement[]>([])
@@ -1918,7 +1924,7 @@ function ReelsPage({ showToast }: { showToast: (m: string) => void }) {
       {mode === 'video' ? (
         <ReelsVideoEditor showToast={showToast} />
       ) : (
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 380px', gap:'20px' }}>
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap:'20px' }}>
         {/* 左：設定 */}
         <div style={{ display:'flex', flexDirection:'column' as any, gap:'16px' }}>
           <div style={{ display:'flex', gap:'10px', alignItems:'flex-start', background:'rgba(251,191,36,0.06)', border:'1px solid rgba(251,191,36,0.25)', borderRadius:'10px', padding:'12px 14px' }}>
@@ -2447,7 +2453,7 @@ export default function Dashboard() {
             <div>
               <button onClick={() => setSelectedTpl(null)} style={{ background:'none', border:'none', color:'#9B9AB8', cursor:'pointer', fontSize:'13px', marginBottom:'20px', display:'flex', alignItems:'center', gap:'6px' }}>← 返回模板庫</button>
               <div style={{ fontSize:'18px', fontWeight:'800', marginBottom:'20px' }}>{selectedTpl.name}</div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 360px', gap:'20px' }}>
+              <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 360px', gap:'20px' }}>
                 <div style={{ display:'flex', flexDirection:'column' as any, gap:'16px' }}>
                   <div style={S.card}>
                     <div style={{ fontSize:'11px', fontWeight:'700', color:'#9B9AB8', letterSpacing:'0.8px', marginBottom:'16px' }}>基本資訊</div>
