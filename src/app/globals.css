@@ -24,3 +24,13 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 手機（<768px）：表單控件字級 ≥16px，避免 iOS Safari 聚焦時自動放大整頁。
+   用 !important 以覆蓋元件的 inline fontSize。 */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
