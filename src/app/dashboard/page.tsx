@@ -44,6 +44,7 @@ type Template = {
   er_label: string | null
   is_hot: boolean | null
   required_plan: string | null
+  industry: string | null
 }
 
 // templates 表只存 badge_text，顏色由 category 在前端對應
@@ -178,6 +179,22 @@ function buildContent(
     { title: '結尾頁（CTA）', body: cta },
   ]
   return { hook, body, cta, hashtags, slides }
+}
+
+// route B：文案庫（copy_library）撈到的公版直接作為結構化產出；
+// {變數} 佔位符原樣保留，供使用者在產出結果中填寫。
+function buildFromLibrary(row: { hook: string; body: string; cta: string }): BuiltContent {
+  return {
+    hook: row.hook,
+    body: row.body,
+    cta: row.cta,
+    hashtags: ['#IG行銷', '#社群經營'],
+    slides: [
+      { title: '封面頁', body: row.hook },
+      { title: '內文', body: row.body },
+      { title: '結尾頁（CTA）', body: row.cta },
+    ],
+  }
 }
 
 // 把結構化內容組成一則可貼上的完整文案
@@ -2099,6 +2116,7 @@ export default function Dashboard() {
   const [topic, setTopic] = useState('')
   const [hook, setHook] = useState('損失規避')
   const [cta, setCta] = useState('save')
+  const [purpose, setPurpose] = useState<'promo' | 'brand'>('promo')   // route B：文案庫目的鍵
   const [built, setBuilt] = useState<BuiltContent | null>(null)   // 結構化產出結果
   const [generating, setGenerating] = useState(false)
   const [savingCal, setSavingCal] = useState(false)
@@ -2165,7 +2183,7 @@ export default function Dashboard() {
         supabase.from('profiles').select('plan').eq('id', auth.user.id).maybeSingle(),
         supabase
           .from('templates')
-          .select('slug,name,category,description,badge_text,er_label,is_hot,required_plan')
+          .select('slug,name,category,description,badge_text,er_label,is_hot,required_plan,industry')
           .eq('is_active', true)
           .order('sort_order'),
         supabase
@@ -2197,16 +2215,35 @@ export default function Dashboard() {
     router.push('/login')
   }
 
-  function handleGenerate() {
+  async function handleGenerate() {
     if (!selectedTpl) return
     setGenerating(true)
     setBuilt(null)
-    // 零 token：純前端組裝骨架＋填變數，不呼叫任何 API
-    const result = buildContent(selectedTpl.category, {
-      brand, topic, industry: industrySuggest?.name ?? '', hookKey: hook, ctaKey: cta,
-    })
-    // 短暫延遲只為了保留「生成中」的手感（非等待 API）
-    setTimeout(() => { setBuilt(result); setGenerating(false) }, 250)
+    let result: BuiltContent | null = null
+    // route B：先試從文案庫（copy_library）撈公版；撈不到／讀取失敗 → fallback 現有前端組裝
+    try {
+      if (selectedTpl.industry) {
+        const { data } = await supabase
+          .from('copy_library')
+          .select('hook,body,cta')
+          .eq('industry', selectedTpl.industry)
+          .eq('purpose', purpose)
+          .eq('platform', 'ig')
+          .maybeSingle()
+        if (data) result = buildFromLibrary(data)
+      }
+    } catch {
+      // 讀取失敗 → 用 fallback，不影響現有功能
+    }
+    if (!result) {
+      // fallback：零 token 純前端組裝骨架＋填變數
+      result = buildContent(selectedTpl.category, {
+        brand, topic, industry: industrySuggest?.name ?? '', hookKey: hook, ctaKey: cta,
+      })
+    }
+    const finalResult = result
+    // 短暫延遲只為了保留「生成中」的手感
+    setTimeout(() => { setBuilt(finalResult); setGenerating(false) }, 250)
   }
 
   async function handleSaveCaption() {
@@ -2466,6 +2503,12 @@ export default function Dashboard() {
                   </div>
                   <div style={S.card}>
                     <div style={{ fontSize:'11px', fontWeight:'700', color:'#9B9AB8', letterSpacing:'0.8px', marginBottom:'16px' }}>內容設定</div>
+                    <label style={S.label}>目的</label>
+                    <div style={{ display:'flex', gap:'8px', marginBottom:'14px' }}>
+                      {[{ k:'promo', l:'導流促購' }, { k:'brand', l:'品牌互動' }].map(o => (
+                        <button key={o.k} onClick={() => setPurpose(o.k as 'promo' | 'brand')} style={{ flex:1, padding:'8px 10px', borderRadius:'8px', fontSize:'13px', fontWeight:'600', background: purpose===o.k ? 'rgba(124,111,255,0.15)' : '#13131A', color: purpose===o.k ? '#A78BFA' : '#9B9AB8', border: purpose===o.k ? '1px solid rgba(124,111,255,0.4)' : '1px solid rgba(255,255,255,0.07)', cursor:'pointer' }}>{o.l}</button>
+                      ))}
+                    </div>
                     <label style={S.label}>Hook 類型（首句風格）</label>
                     <select style={{ ...S.select, marginBottom:'14px' }} value={hook} onChange={e=>setHook(e.target.value)}>
                       {HOOKS.map(h => <option key={h} value={h}>{h}</option>)}
